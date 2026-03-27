@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Niyantra AI Chat — Study Companion</title>
+    <!-- Google Fonts + TailwindCSS + Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0f1f 0%, #071426 100%);
+            overflow-x: hidden;
+        }
+        /* Custom scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        /* Chat bubble animations */
+        .message-bubble {
+            animation: fadeSlideUp 0.3s ease-out;
+        }
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Typing indicator */
+        .typing-indicator span {
+            animation: blink 1.4s infinite both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+            40% { opacity: 1; transform: translateY(-4px); }
+        }
+        /* Sidebar transition */
+        .sidebar {
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .sidebar.closed {
+            transform: translateX(-100%);
+        }
+        .overlay {
+            transition: opacity 0.3s ease;
+        }
+        /* Feature item hover */
+        .feature-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .feature-item:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateX(4px);
+        }
+        .feature-item.active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.2));
+            border-left: 3px solid #3b82f6;
+        }
+        /* Input glow */
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        /* Button hover */
+        .send-btn {
+            transition: all 0.2s;
+        }
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            background: #2563eb;
+        }
+        /* Exit button */
+        .exit-btn {
+            transition: all 0.2s;
+        }
+        .exit-btn:hover {
+            transform: scale(1.1);
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Container -->
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar Overlay (mobile) -->
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-20 hidden transition-opacity md:hidden"></div>
+        
+        <!-- Left Sidebar -->
+        <aside id="sidebar" class="sidebar fixed md:relative w-72 h-full bg-gray-900/95 backdrop-blur-xl border-r border-blue-500/30 z-30 flex flex-col shadow-2xl md:translate-x-0 transition-transform">
+            <!-- Sidebar Header -->
+            <div class="p-5 border-b border-blue-500/30">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-brain text-2xl text-blue-400"></i>
+                        <span class="text-xl font-bold bg-gradient-to-r from-white to-blue-300 bg-clip-text text-transparent">Niyantra</span>
+                    </div>
+                    <button id="closeSidebarBtn" class="md:hidden text-gray-400 hover:text-white text-xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">AI Study Assistant</p>
+            </div>
+            
+            <!-- Features List -->
+            <div class="flex-1 overflow-y-auto py-4">
+                <div class="px-3 space-y-1">
+                    <div class="text-xs uppercase text-gray-500 px-3 mb-2 font-semibold">Learning Tools</div>
+                    <div class="feature-item" data-feature="notes">
+                        <div class="flex items-center gap-3 px-3 py-3 rounded-lg">
+                            <i class="fas fa-pen-fancy text-blue-400 w-5"></i>
+                            <span class="text-gray-200 font-medium">Quick Study Notes</span>
+                        </div>
+                    </div>
+                    <div class="feature-item" data-feature="homework">
+                        <div class="flex items-center gap-3 px-3 py-3 rounded-lg">
+                            <i class="fas fa-calculator text-green-400 w-5"></i>
+                            <span class="text-gray-200 font-medium">Homework / Question Solver</span>
+                        </div>
+                    </div>
+                    <div class="feature-item" data-feature="flashcards">
+                        <div class="flex items-center gap-3 px-3 py-3 rounded-lg">
+                            <i class="fas fa-layer-group text-purple-400 w-5"></i>
+                            <span class="text-gray-200 font-medium">Exam Prep Flashcards</span>
+                        </div>
+                    </div>
+                    <div class="feature-item" data-feature="brain">
+                        <div class="flex items-center gap-3 px-3 py-3 rounded-lg">
+                            <i class="fas fa-puzzle-piece text-yellow-400 w-5"></i>
+                            <span class="text-gray-200 font-medium">Brain Teasers / Fun Learning</span>
+                        </div>
+                    </div>
+                    <div class="feature-item" data-feature="formula">
+                        <div class="flex items-center gap-3 px-3 py-3 rounded-lg">
+                            <i class="fas fa-square-root-alt text-indigo-400 w-5"></i>
+                            <span class="text-gray-200 font-medium">Concept Revision / Formula Finder</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-blue-500/30 text-xs text-gray-500">
+                <p class="flex items-center gap-1"><i class="fas fa-crown text-yellow-500"></i> Founder: Omkar R. Marennavar</p>
+                <p class="mt-1">Class 12 PCM CS Student</p>
+            </div>
+        </aside>
+        
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col h-full relative">
+            <!-- Mobile Header -->
+            <div class="md:hidden flex items-center justify-between p-4 bg-gray-900/80 backdrop-blur-sm border-b border-blue-500/30">
+                <button id="openSidebarBtn" class="text-2xl text-white">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-brain text-blue-400"></i>
+                    <span class="font-bold">Niyantra Chat</span>
+                </div>
+                <div class="w-8"></div>
+            </div>
+            
+            <!-- Chat Header with Exit Crossmark -->
+            <div id="chatHeader" class="hidden md:flex items-center justify-between p-4 border-b border-blue-500/30 bg-gray-900/50 backdrop-blur-sm">
+                <div class="flex items-center gap-3">
+                    <i id="featureIcon" class="fas fa-pen-fancy text-2xl text-blue-400"></i>
+                    <h2 id="featureTitle" class="text-xl font-bold text-white">Quick Study Notes</h2>
+                </div>
+                <button id="exitFeatureBtn" class="exit-btn text-gray-400 hover:text-red-400 text-2xl">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </div>
+            
+            <!-- Chat Messages Container -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 chat-messages">
+                <div class="flex justify-start">
+                    <div class="bg-gray-800/70 backdrop-blur-sm rounded-2xl rounded-tl-none px-5 py-3 max-w-[85%] md:max-w-[70%] message-bubble">
+                        <i class="fas fa-robot text-blue-400 mr-2"></i>
+                        <span class="text-gray-200">✨ Hi! I'm your Niyantra AI assistant. I'll help you with <strong id="welcomeFeature">Quick Study Notes</strong>. Ask me anything about summarizing topics, creating notes, or studying smarter!</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="p-4 border-t border-blue-500/30 bg-gray-900/50 backdrop-blur-sm">
+                <div class="flex gap-3 items-end">
+                    <div class="flex-1 relative">
+                        <textarea id="userInput" rows="1" placeholder="Ask me anything..." class="w-full bg-gray-800/80 text-white rounded-2xl px-4 py-3 pr-12 resize-none outline-none border border-blue-500/30 focus:border-blue-500 input-glow transition"></textarea>
+                        <button id="voiceInputBtn" class="absolute right-3 bottom-3 text-blue-400 hover:text-blue-300 transition text-xl">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <button id="sendBtn" class="send-btn bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    <i class="fas fa-microphone-alt"></i> Click mic for voice input | AI responses powered by OpenRouter
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // OpenRouter Configuration
+        const OPENROUTER_API_KEY = "YOUR_OPENROUTER_API_KEY"; // Replace with actual key
+        const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+        
+        // Feature definitions with specific contexts and icons
+        const features = {
+            notes: {
+                name: "Quick Study Notes",
+                icon: "fas fa-pen-fancy",
+                context: "You are an AI study assistant specialized in creating concise, well-structured study notes. Help students summarize topics, highlight key points, and organize information clearly. Format responses with bullet points or short paragraphs when helpful. Keep answers focused and educational."
+            },
+            homework: {
+                name: "Homework / Question Solver",
+                icon: "fas fa-calculator",
+                context: "You are an AI tutor that provides step-by-step solutions to academic problems. Break down complex questions into clear, logical steps. Explain reasoning thoroughly. Cover subjects like math, science, and programming. Always show the process."
+            },
+            flashcards: {
+                name: "Exam Prep Flashcards",
+                icon: "fas fa-layer-group",
+                context: "You are an AI flashcard generator. Create Q&A style flashcards for effective exam preparation. Format responses as question-answer pairs or concise key facts. Help students memorize definitions, formulas, and concepts."
+            },
+            brain: {
+                name: "Brain Teasers / Fun Learning",
+                icon: "fas fa-puzzle-piece",
+                context: "You are an AI that creates engaging brain teasers, riddles, logic puzzles, and fun educational games. Challenge students while keeping learning enjoyable. Provide hints and explain answers playfully."
+            },
+            formula: {
+                name: "Concept Revision / Formula Finder",
+                icon: "fas fa-square-root-alt",
+                context: "You are an AI formula expert. Provide key formulas, derivations, and concept summaries for various subjects (math, physics, chemistry). Organize formulas clearly with explanations. Help students revise quickly."
+            }
+        };
+        
+        // Current state
+        let currentFeature = "notes";
+        let currentSessionId = Date.now().toString(); // Unique session per feature selection
+        let isLoading = false;
+        let recognition = null;
+        
+        // Session storage: separate chat history per feature+sessions
+        let chatSessions = new Map(); // key: `${feature}_${sessionId}`, value: messages array
+        
+        // DOM Elements
+        const chatMessagesDiv = document.getElementById("chatMessages");
+        const userInput = document.getElementById("userInput");
+        const sendBtn = document.getElementById("sendBtn");
+        const voiceBtn = document.getElementById("voiceInputBtn");
+        const exitBtn = document.getElementById("exitFeatureBtn");
+        const featureTitle = document.getElementById("featureTitle");
+        const featureIcon = document.getElementById("featureIcon");
+        const welcomeFeatureSpan = document.getElementById("welcomeFeature");
+        const sidebar = document.getElementById("sidebar");
+        const openSidebarBtn = document.getElementById("openSidebarBtn");
+        const closeSidebarBtn = document.getElementById("closeSidebarBtn");
+        const overlay = document.getElementById("sidebarOverlay");
+        
+        // Initialize Web Speech API
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                voiceBtn.style.opacity = "0.5";
+                voiceBtn.title = "Speech recognition not supported";
+                return null;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognitionObj = new SpeechRecognition();
+            recognitionObj.lang = "en-US";
+            recognitionObj.interimResults = false;
+            recognitionObj.maxAlternatives = 1;
+            return recognitionObj;
+        }
+        
+        // Voice input handler
+        function startVoiceInput() {
+            if (!recognition) {
+                recognition = initSpeechRecognition();
+                if (!recognition) {
+                    alert("Voice input not supported in this browser.");
+                    return;
+                }
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    userInput.value = transcript;
+                    userInput.dispatchEvent(new Event('input'));
+                };
+                recognition.onerror = (event) => {
+                    console.error("Speech error:", event.error);
+                    const msg = event.error === 'not-allowed' ? 'Microphone access denied' : 'Voice recognition failed';
+                    addSystemMessage(msg, "error");
+                };
+                recognition.onend = () => {
+                    // ready for next
+                };
+            }
+            try {
+                recognition.start();
+                addSystemMessage("🎙️ Listening... speak now", "info");
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+        
+        // Add message to UI
+        function addMessage(content, isUser) {
+            const div = document.createElement("div");
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start'} message-bubble`;
+            div.innerHTML = `
+                <div class="${isUser ? 'bg-blue-600/80 rounded-2xl rounded-tr-none' : 'bg-gray-800/80 backdrop-blur-sm rounded-2xl rounded-tl-none'} px-5 py-3 max-w-[85%] md:max-w-[70%]">
+                    ${!isUser ? '<i class="fas fa-robot text-blue-400 mr-2"></i>' : '<i class="fas fa-user text-blue-300 mr-2"></i>'}
+                    <span class="text-gray-100">${escapeHtml(content)}</span>
+                </div>
+            `;
+            chatMessagesDiv.appendChild(div);
+            scrollToBottom();
+        }
+        
+        function addSystemMessage(text, type = "info") {
+            const div = document.createElement("div");
+            div.className = "flex justify-center message-bubble";
+            div.innerHTML = `<div class="bg-gray-700/50 text-xs px-3 py-1 rounded-full text-gray-300"><i class="fas fa-info-circle"></i> ${escapeHtml(text)}</div>`;
+            chatMessagesDiv.appendChild(div);
+            scrollToBottom();
+        }
+        
+        function showTypingIndicator() {
+            const typingDiv = document.createElement("div");
+            typingDiv.id = "typingIndicator";
+            typingDiv.className = "flex justify-start message-bubble";
+            typingDiv.innerHTML = `
+                <div class="bg-gray-800/80 backdrop-blur-sm rounded-2xl rounded-tl-none px-5 py-3">
+                    <div class="typing-indicator flex gap-1">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full inline-block"></span>
+                        <span class="w-2 h-2 bg-blue-400 rounded-full inline-block"></span>
+                        <span class="w-2 h-2 bg-blue-400 rounded-full inline-block"></span>
+                    </div>
+                </div>
+            `;
+            chatMessagesDiv.appendChild(typingDiv);
+            scrollToBottom();
+        }
+        
+        function hideTypingIndicator() {
+            const indicator = document.getElementById("typingIndicator");
+            if (indicator) indicator.remove();
+        }
+        
+        function scrollToBottom() {
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Get session key
+        function getSessionKey() {
+            return `${currentFeature}_${currentSessionId}`;
+        }
+        
+        // Load current session messages into UI
+        function loadCurrentSession() {
+            chatMessagesDiv.innerHTML = "";
+            const key = getSessionKey();
+            const messages = chatSessions.get(key) || [];
+            if (messages.length === 0) {
+                // Add welcome message based on feature
+                const welcomeMsg = getWelcomeMessage();
+                addMessage(welcomeMsg, false);
+                // Store in session
+                const newMessages = [{ role: "assistant", content: welcomeMsg }];
+                chatSessions.set(key, newMessages);
+            } else {
+                messages.forEach(msg => {
+                    addMessage(msg.content, msg.role === "user");
+                });
+            }
+        }
+        
+        function getWelcomeMessage() {
+            const feature = features[currentFeature];
+            switch(currentFeature) {
+                case "notes": return `✨ Hi! I'm your Niyantra AI assistant. I'll help you with <strong>Quick Study Notes</strong>. Ask me about summarizing topics, creating concise notes, or organizing study material!`;
+                case "homework": return `📚 I'm your Homework Solver! Send me any academic question, and I'll provide step-by-step solutions with clear explanations. What subject can I help with today?`;
+                case "flashcards": return `🃏 Let's create powerful flashcards! Ask me to generate Q&A pairs for any topic, and I'll help you memorize key concepts for exams.`;
+                case "brain": return `🧠 Ready for a brain workout? I'll give you fun puzzles, riddles, and logic teasers. Type "riddle" or "puzzle" to get started!`;
+                case "formula": return `📐 Formula Finder active! Need a formula or concept revision? Ask for formulas in math, physics, chemistry, and I'll provide them with explanations.`;
+                default: return "How can I assist you today?";
+            }
+        }
+        
+        // Save message to session
+        function saveMessage(role, content) {
+            const key = getSessionKey();
+            let messages = chatSessions.get(key) || [];
+            messages.push({ role, content });
+            chatSessions.set(key, messages);
+        }
+        
+        // Call OpenRouter API
+        async function callAI(userMessage) {
+            const key = getSessionKey();
+            let history = chatSessions.get(key) || [];
+            // Build messages array with system context
+            const systemContext = features[currentFeature].context;
+            const apiMessages = [
+                { role: "system", content: systemContext },
+                ...history.map(msg => ({ role: msg.role, content: msg.content }))
+            ];
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "HTTP-Referer": window.location.origin,
+                        "X-Title": "Niyantra AI Study Chat"
+                    },
+                    body: JSON.stringify({
+                        model: "openai/gpt-3.5-turbo",
+                        messages: apiMessages,
+                        temperature: 0.7,
+                        max_tokens: 800
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
+                }
+                
+                const data = await response.json();
+                const aiReply = data.choices[0].message.content;
+                return aiReply;
+            } catch (error) {
+                console.error("OpenRouter error:", error);
+                return `⚠️ I'm having trouble connecting. ${error.message}. Please check your API key or try again later.`;
+            }
+        }
+        
+        // Send message flow
+        async function sendMessage() {
+            if (isLoading) return;
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            saveMessage("user", message);
+            userInput.value = "";
+            userInput.style.height = "auto";
+            
+            isLoading = true;
+            sendBtn.disabled = true;
+            showTypingIndicator();
+            
+            try {
+                const aiResponse = await callAI(message);
+                hideTypingIndicator();
+                addMessage(aiResponse, false);
+                saveMessage("assistant", aiResponse);
+            } catch (err) {
+                hideTypingIndicator();
+                addMessage("Sorry, an error occurred. Please try again.", false);
+                console.error(err);
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+        
+        // Reset session for current feature (exit and clear)
+        function resetFeatureSession() {
+            currentSessionId = Date.now().toString(); // new session
+            loadCurrentSession(); // reload fresh welcome
+            // Show header exit cross is visible (reset)
+            document.getElementById("chatHeader").classList.remove("hidden");
+        }
+        
+        // Switch feature
+        function switchFeature(featureId) {
+            if (currentFeature === featureId) return;
+            currentFeature = featureId;
+            // Create new session ID (separate chat session)
+            currentSessionId = Date.now().toString();
+            
+            // Update UI
+            featureTitle.textContent = features[featureId].name;
+            featureIcon.className = `${features[featureId].icon} text-2xl`;
+            if (welcomeFeatureSpan) welcomeFeatureSpan.textContent = features[featureId].name;
+            
+            // Update active state in sidebar
+            document.querySelectorAll(".feature-item").forEach(el => {
+                el.classList.remove("active");
+                if (el.getAttribute("data-feature") === featureId) {
+                    el.classList.add("active");
+                }
+            });
+            
+            // Load new session (empty, will show welcome)
+            loadCurrentSession();
+            
+            // Ensure header exit is visible
+            document.getElementById("chatHeader").classList.remove("hidden");
+        }
+        
+        // Exit current feature -> reset to default (notes) and clear
+        function exitFeature() {
+            // Reset to Quick Study Notes
+            switchFeature("notes");
+            addSystemMessage("🔄 Session reset. Back to Quick Study Notes. Start a fresh conversation!", "info");
+        }
+        
+        // Auto-resize textarea
+        function autoResizeTextarea() {
+            userInput.style.height = "auto";
+            userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
+        }
+        
+        // Event Listeners
+        sendBtn.addEventListener("click", sendMessage);
+        userInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        userInput.addEventListener("input", autoResizeTextarea);
+        voiceBtn.addEventListener("click", startVoiceInput);
+        exitBtn.addEventListener("click", exitFeature);
+        
+        // Sidebar mobile handlers
+        openSidebarBtn.addEventListener("click", () => {
+            sidebar.classList.remove("closed");
+            overlay.classList.remove("hidden");
+        });
+        closeSidebarBtn.addEventListener("click", () => {
+            sidebar.classList.add("closed");
+            overlay.classList.add("hidden");
+        });
+        overlay.addEventListener("click", () => {
+            sidebar.classList.add("closed");
+            overlay.classList.add("hidden");
+        });
+        
+        // Feature selection
+        document.querySelectorAll(".feature-item").forEach(el => {
+            el.addEventListener("click", () => {
+                const featureId = el.getAttribute("data-feature");
+                switchFeature(featureId);
+                // On mobile, close sidebar
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add("closed");
+                    overlay.classList.add("hidden");
+                }
+            });
+        });
+        
+        // Initialize
+        function init() {
+            // Set default active feature
+            switchFeature("notes");
+            // Pre-fetch session storage for notes
+            if (!chatSessions.has(getSessionKey())) {
+                loadCurrentSession();
+            }
+            // Voice init
+            recognition = initSpeechRecognition();
+            // Ensure sidebar starts closed on mobile, open on desktop
+            if (window.innerWidth < 768) {
+                sidebar.classList.add("closed");
+            } else {
+                sidebar.classList.remove("closed");
+            }
+            // Disable send if no API key warning
+            if (OPENROUTER_API_KEY === "YOUR_OPENROUTER_API_KEY") {
+                addSystemMessage("⚠️ OpenRouter API key not configured. Please replace 'YOUR_OPENROUTER_API_KEY' with a valid key in the script.", "error");
+                sendBtn.disabled = true;
+            }
+        }
+        
+        init();
+    </script>
+</body>
+</html>
