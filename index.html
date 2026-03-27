@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Niyantra | AI for Students — Study Smarter</title>
+  <!-- Google Fonts + TailwindCSS + Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- AOS (Animate on Scroll) Library for fade-ins -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 10% 20%, #0a0f1f 0%, #020617 100%);
+      color: #f0f3fa;
+      overflow-x: hidden;
+    }
+    /* Floating particles animation */
+    .particle {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .particle span {
+      position: absolute;
+      display: block;
+      background: rgba(59, 130, 246, 0.25);
+      border-radius: 50%;
+      box-shadow: 0 0 18px rgba(59, 130, 246, 0.3);
+      animation: floatParticle 14s infinite ease-in-out;
+    }
+    @keyframes floatParticle {
+      0% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.3; }
+      50% { transform: translateY(-70px) translateX(35px) scale(1.2); opacity: 0.6; }
+      100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.3; }
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    /* Premium card hover effects */
+    .feature-card {
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      background: rgba(15, 25, 45, 0.7);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 1.75rem;
+    }
+    .feature-card:hover {
+      transform: scale(1.05) translateY(-8px);
+      box-shadow: 0 28px 40px -15px rgba(0, 100, 255, 0.5), 0 0 0 1px rgba(0, 180, 255, 0.5);
+      background: rgba(30, 45, 75, 0.85);
+      border-color: #3b82f6;
+    }
+    /* Glowing button */
+    .btn-glow {
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 18px 0 rgba(59, 130, 246, 0.5);
+    }
+    .btn-glow:hover {
+      transform: scale(1.07);
+      box-shadow: 0 12px 28px rgba(59, 130, 246, 0.8);
+      background: #2563eb;
+    }
+    /* Sidebar (mobile collapsible) */
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background: rgba(8, 15, 30, 0.96);
+      backdrop-filter: blur(16px);
+      z-index: 1000;
+      transition: left 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border-right: 1px solid rgba(59, 130, 246, 0.4);
+      box-shadow: 8px 0 30px rgba(0, 0, 0, 0.5);
+    }
+    .mobile-sidebar.open {
+      left: 0;
+    }
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+ backdrop-filter: blur(3px);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    /* Carousel for mobile cards (horizontal) */
+    .carousel-container {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+    .carousel-container::-webkit-scrollbar {
+      height: 5px;
+    }
+    .carousel-container::-webkit-scrollbar-track {
+      background: #1e293b;
+      border-radius: 10px;
+    }
+    .carousel-container::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 10px;
+    }
+    .carousel-card {
+      scroll-snap-align: start;
+      flex: 0 0 85%;
+      max-width: 290px;
+    }
+    @media (min-width: 768px) {
+      .carousel-container {
+        overflow-x: visible;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .carousel-card {
+        flex: 0 0 auto;
+        max-width: 100%;
+      }
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .nav-link {
+      transition: all 0.2s;
+    }
+    .nav-link:hover {
+      color: #60a5fa;
+      transform: translateX(6px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating particles background -->
+  <div class="particle" id="particles"></div>
+
+  <!-- Mobile Sidebar (Collapsible) -->
+  <div class="mobile-sidebar" id="mobileSidebar">
+    <div class="flex flex-col h-full p-6">
+      <div class="flex justify-between items-center mb-10 border-b border-blue-500/30 pb-4">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-brain text-2xl text-blue-400"></i>
+          <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-blue-300 bg-clip-text text-transparent">Niyantra</span>
+        </div>
+        <button id="closeSidebarBtn" class="text-gray-300 hover:text-white text-2xl">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <nav class="flex flex-col gap-6 text-lg">
+        <a href="#home" class="nav-link flex items-center gap-3 text-gray-200 hover:text-blue-400 transition"><i class="fas fa-home w-6"></i> Home</a>
+        <a href="#about" class="nav-link flex items-center gap-3 text-gray-200 hover:text-blue-400 transition"><i class="fas fa-info-circle w-6"></i> About</a>
+        <a href="#features-section" class="nav-link flex items-center gap-3 text-gray-200 hover:text-blue-400 transition"><i class="fas fa-cube w-6"></i> Features</a>
+      </nav>
+      <div class="mt-auto pt-8 text-xs text-gray-400 border-t border-white/10">
+        <p class="flex items-center gap-1"><i class="fas fa-crown text-yellow-500"></i> Founder: Omkar R. Marennavar</p>
+        <p class="mt-1">Class 12 PCM CS Student</p>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main Content -->
+  <div class="relative z-10 container mx-auto px-5 md:px-12 lg:px-20 py-5 md:py-8">
+    
+    <!-- Header with menu button + Logo -->
+    <div class="flex justify-between items-center mb-4 md:mb-6">
+      <!-- Mobile menu button -->
+      <button id="menuToggleBtn" class="md:hidden text-2xl text-white bg-white/10 p-2 rounded-xl backdrop-blur-sm border border-white/20">
+        <i class="fas fa-bars"></i>
+      </button>
+      <!-- Desktop logo (centered on desktop, but on mobile it's centered with flex) -->
+      <div class="flex justify-center w-full md:w-auto md:justify-start">
+        <div class="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm px-5 py-2 rounded-full border border-white/10 shadow-lg">
+          <i class="fas fa-brain text-2xl md:text-3xl text-blue-400"></i>
+          <span class="text-2xl md:text-4xl font-black tracking-tight bg-gradient-to-r from-white via-blue-200 to-indigo-300 bg-clip-text text-transparent">Niyantra</span>
+        </div>
+      </div>
+      <div class="w-8 md:hidden"></div> <!-- spacer for alignment -->
+    </div>
+
+    <!-- Quote ABOVE (placed after logo and before hero) -->
+    <div id="home" class="text-center mt-6 md:mt-8" data-aos="fade-up" data-aos-duration="800">
+      <div class="inline-block px-6 py-3 rounded-full bg-blue-500/10 backdrop-blur-sm border border-blue-400/30 shadow-md">
+        <p class="text-xl md:text-2xl font-medium italic tracking-wide">
+          “Empowering Students, <span class="gradient-text font-bold">One AI Answer</span> at a Time”
+        </p>
+      </div>
+    </div>
+
+    <!-- About Section (brief description) -->
+    <div id="about" class="max-w-3xl mx-auto text-center mt-12 mb-12" data-aos="fade-up" data-aos-delay="100">
+      <div class="bg-black/30 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-blue-500/20 shadow-2xl">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4 flex items-center justify-center gap-2"><i class="fas fa-robot text-blue-400"></i> About Niyantra</h2>
+        <p class="text-gray-200 text-base md:text-lg leading-relaxed">
+          Niyantra is an intelligent AI ecosystem crafted for students, by a student. We leverage cutting-edge generative AI to <span class="text-blue-300 font-semibold">supercharge studying</span> — providing instant notes, homework solutions, interactive flashcards, and concept mastery tools. Our goal: turn pressure into productivity and make learning limitless.
+        </p>
+      </div>
+    </div>
+
+    <!-- Hero Start button centered below quote (actually quote already above, now start button) -->
+    <div class="text-center my-10 md:my-12" data-aos="zoom-in" data-aos-duration="900">
+      <a href="#features-section" id="startButtonHero" class="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-10 rounded-full text-lg md:text-xl transition-all duration-300 btn-glow border border-blue-400 shadow-2xl backdrop-blur-sm">
+        🚀 Start Exploring <i class="fas fa-arrow-right ml-2"></i>
+      </a>
+    </div>
+
+    <!-- Features Section: 5 Animated Cards -->
+    <div id="features-section" class="mt-10 md:mt-20">
+      <div class="text-center mb-12" data-aos="fade-right">
+        <h2 class="text-3xl md:text-4xl font-extrabold inline-block border-b-4 border-blue-500 pb-2 px-4">✨ AI-Powered Arsenal ✨</h2>
+        <p class="text-gray-300 mt-4 text-lg">Hover over cards — scale, glow & shadow animation</p>
+      </div>
+
+      <!-- Cards: Desktop grid, mobile horizontal carousel -->
+      <div class="flex md:grid md:grid-cols-2 lg:grid-cols-5 gap-6 carousel-container pb-5 md:pb-0" id="featureCarousel">
+        <!-- 1. Quick Study Notes -->
+        <div class="feature-card p-6 carousel-card transition-all" data-aos="flip-left" data-aos-delay="100">
+          <div class="text-4xl mb-4 text-blue-300"><i class="fas fa-pen-fancy"></i></div>
+          <h3 class="text-xl font-bold mb-2">Quick Study Notes</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">AI condenses textbooks, lectures, and PDFs into crisp summaries — learn 2x faster.</p>
+          <div class="mt-4 text-blue-400 text-sm flex items-center gap-1"><i class="fas fa-bolt"></i> smart brevity</div>
+        </div>
+        <!-- 2. Homework / Question Solver -->
+        <div class="feature-card p-6 carousel-card transition-all" data-aos="flip-left" data-aos-delay="150">
+          <div class="text-4xl mb-4 text-blue-300"><i class="fas fa-calculator"></i></div>
+          <h3 class="text-xl font-bold mb-2">Homework / Question Solver</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">Step-by-step solutions for math, science, coding — with intuitive explanations.</p>
+          <div class="mt-4 text-blue-400 text-sm"><i class="fas fa-check-double"></i> 24/7 AI tutor</div>
+        </div>
+        <!-- 3. Exam Prep Flashcards -->
+        <div class="feature-card p-6 carousel-card transition-all" data-aos="flip-left" data-aos-delay="200">
+          <div class="text-4xl mb-4 text-blue-300"><i class="fas fa-layer-group"></i></div>
+          <h3 class="text-xl font-bold mb-2">Exam Prep Flashcards</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">Spaced repetition & smart decks for ultimate memory retention before finals.</p>
+          <div class="mt-4 text-blue-400 text-sm"><i class="fas fa-brain"></i> active recall</div>
+        </div>
+        <!-- 4. Brain Teasers / Fun Learning -->
+        <div class="feature-card p-6 carousel-card transition-all" data-aos="flip-left" data-aos-delay="250">
+          <div class="text-4xl mb-4 text-blue-300"><i class="fas fa-puzzle-piece"></i></div>
+          <h3 class="text-xl font-bold mb-2">Brain Teasers / Fun Learning</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">Gamified puzzles, logic riddles & AI-generated quizzes to boost curiosity.</p>
+          <div class="mt-4 text-blue-400 text-sm"><i class="fas fa-gamepad"></i> learn while playing</div>
+        </div>
+        <!-- 5. Concept Revision / Formula Finder -->
+        <div class="feature-card p-6 carousel-card transition-all" data-aos="flip-left" data-aos-delay="300">
+          <div class="text-4xl mb-4 text-blue-300"><i class="fas fa-square-root-alt"></i></div>
+          <h3 class="text-xl font-bold mb-2">Concept Revision / Formula Finder</h3>
+          <p class="text-gray-300 text-sm leading-relaxed">Instant formulas, derivations, and concept maps — perfect for last-minute revision.</p>
+          <div class="mt-4 text-blue-400 text-sm"><i class="fas fa-magic"></i> one-tap lookup</div>
+        </div>
+      </div>
+      <!-- Mobile swipe hint -->
+      <div class="text-center mt-3 md:hidden text-blue-300 text-sm flex items-center justify-center gap-1 animate-pulse">
+        <i class="fas fa-arrow-left"></i> swipe to see all cards <i class="fas fa-arrow-right"></i>
+      </div>
+    </div>
+
+    <!-- Divider with parallax effect -->
+    <div class="my-16 md:my-24 relative h-px bg-gradient-to-r from-transparent via-blue-500/70 to-transparent"></div>
+
+    <!-- Footer -->
+    <footer class="mt-8 pt-8 pb-10 text-center rounded-t-2xl border-t border-blue-500/20 bg-black/20 backdrop-blur-sm">
+      <div class="flex justify-center gap-6 mb-4 text-2xl text-blue-400">
+        <i class="fab fa-python hover:scale-110 transition duration-300"></i>
+        <i class="fas fa-robot"></i>
+        <i class="fas fa-graduation-cap"></i>
+      </div>
+      <p class="text-gray-200 text-base md:text-lg font-medium">
+        Founder: <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-400">Omkar R. Marennavar</span>, Class 12 PCM CS Student.
+      </p>
+      <p class="text-gray-400 text-sm mt-3 flex items-center justify-center gap-2">
+        <i class="fas fa-crown text-yellow-500 text-xs"></i> Niyantra — shaping future minds with AI
+      </p>
+      <p class="text-gray-500 text-xs mt-5">© 2025 Niyantra AI | study smarter, not harder</p>
+    </footer>
+  </div>
+
+  <!-- Scripts for particles, sidebar toggle, smooth scroll, AOS etc -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      once: true,
+      offset: 80,
+      easing: 'ease-out-cubic'
+    });
+
+    // Generate floating particles
+    function initParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      const count = 55;
+      for (let i = 0; i < count; i++) {
+        const span = document.createElement('span');
+        const size = Math.random() * 55 + 12;
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const duration = Math.random() * 18 + 10;
+        const delay = Math.random() * 12;
+        span.style.width = `${size}px`;
+        span.style.height = `${size}px`;
+        span.style.left = `${left}%`;
+        span.style.top = `${top}%`;
+        span.style.animation = `floatParticle ${duration}s infinite ease-in-out`;
+        span.style.animationDelay = `${delay}s`;
+        span.style.opacity = Math.random() * 0.5 + 0.1;
+        span.style.background = `radial-gradient(circle, rgba(96, 165, 250, 0.4), rgba(37, 99, 235, 0.1))`;
+        container.appendChild(span);
+      }
+    }
+    initParticles();
+
+    // Sidebar functionality (collapsible menu)
+    const menuBtn = document.getElementById('menuToggleBtn');
+    const closeBtn = document.getElementById('closeSidebarBtn');
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    if (menuBtn) menuBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+
+    // Close sidebar when clicking any nav link inside sidebar
+    document.querySelectorAll('#mobileSidebar a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        closeSidebar();
+        // optional: smooth scroll handled by default but ensures target
+        const targetId = link.getAttribute('href');
+        if (targetId && targetId !== '#') {
+          const targetElem = document.querySelector(targetId);
+          if (targetElem) {
+            e.preventDefault();
+            targetElem.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    });
+
+    // Smooth scroll for all anchor links including start button & regular nav (desktop links)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const hash = this.getAttribute('href');
+        if (hash === "#" || hash === "") return;
+        const target = document.querySelector(hash);
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // update URL hash without jumping
+          history.pushState(null, null, hash);
+        }
+      });
+    });
+
+    // Additional start button handling for consistency
+    const startBtn = document.getElementById('startButtonHero');
+    if (startBtn) {
+      startBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const featuresSec = document.getElementById('features-section');
+        if (featuresSec) featuresSec.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    // tiny parallax on scroll: move particles background? but keep it subtle, add shift to main container
+    window.addEventListener('scroll', () => {
+      const scrolled = window.scrollY;
+      const heroDiv = document.querySelector('#home .inline-block');
+      if (heroDiv) {
+        heroDiv.style.transform = `translateY(${scrolled * 0.05}px)`;
+      }
+      const aboutCard = document.querySelector('#about .bg-black\\/30');
+      if (aboutCard) {
+        aboutCard.style.transform = `translateY(${scrolled * -0.02}px)`;
+      }
+    });
+
+    // Ensure mobile carousel also allows horizontal scroll
+    const carousel = document.getElementById('featureCarousel');
+    if (carousel && window.innerWidth < 768) {
+      carousel.style.scrollSnapType = 'x mandatory';
+    }
+
+    // Additional: refresh AOS on window resize (optional)
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.AOS) AOS.refresh();
+        if (window.innerWidth >= 768) {
+          if (carousel) carousel.style.scrollSnapType = 'none';
+        } else {
+          if (carousel) carousel.style.scrollSnapType = 'x mandatory';
+        }
+      }, 150);
+    });
+  </script>
+
+  <!-- Additional style for responsive card grid and premium touches -->
+  <style>
+    @media (max-width: 767px) {
+      #featureCarousel {
+        display: flex;
+        flex-direction: row;
+        gap: 1.2rem;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 0.75rem;
+      }
+      .carousel-card {
+        min-width: 270px;
+        width: 85%;
+      }
+    }
+    @media (min-width: 768px) {
+      #featureCarousel {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1.5rem;
+      }
+      .carousel-card {
+        min-width: auto;
+      }
+    }
+    @media (min-width: 1280px) {
+      #featureCarousel {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+    .feature-card {
+      transition: transform 0.35s, box-shadow 0.3s, background 0.2s, border-color 0.2s;
+    }
+    .btn-glow {
+      letter-spacing: 0.3px;
+    }
+    .sidebar-overlay.active {
+      backdrop-filter: blur(5px);
+    }
+    /* subtle smoothness */
+    ::selection {
+      background: #3b82f6;
+      color: white;
+    }
+  </style>
+</body>
+</html>
